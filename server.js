@@ -1,17 +1,3 @@
-const express = require("express");
-const cors = require("cors");
-const bodyParser = require("body-parser");
-require("dotenv").config();
-const axios = require("axios");
-
-const app = express();
-app.use(cors());
-app.use(bodyParser.json());
-
-app.get("/", (req, res) => {
-  res.send("AI Bot Backend Running with Groq 🚀");
-});
-
 app.post("/generate", async (req, res) => {
   try {
     console.log("BODY RECEIVED:", req.body);
@@ -20,9 +6,10 @@ app.post("/generate", async (req, res) => {
 
     if (!prompt) {
       return res.json({
-        success: false,
-        error: "No query or prompt received",
-        received: req.body
+        action: "reply",
+        replies: [
+          { type: "text", text: "❗No query received from SalesIQ" }
+        ]
       });
     }
 
@@ -40,16 +27,30 @@ app.post("/generate", async (req, res) => {
       }
     );
 
+    const aiText = response.data.choices[0].message.content;
+
+    // 🔥 IMPORTANT: Send in SalesIQ-compatible format
     res.json({
-      success: true,
-      content: response.data.choices[0].message.content,
+      action: "reply",
+      replies: [
+        {
+          type: "text",
+          text: aiText
+        }
+      ]
     });
 
   } catch (error) {
     console.log(error.response?.data || error.message);
-    res.json({ success: false, error: error.message });
+
+    res.json({
+      action: "reply",
+      replies: [
+        {
+          type: "text",
+          text: "⚠️ Server error: " + error.message
+        }
+      ]
+    });
   }
 });
-
-
-app.listen(5000, () => console.log("Server running on port 5000"));
