@@ -14,7 +14,17 @@ app.get("/", (req, res) => {
 
 app.post("/generate", async (req, res) => {
   try {
-    const { prompt } = req.body;
+    console.log("BODY RECEIVED:", req.body);
+
+    const prompt = req.body.query || req.body.prompt;
+
+    if (!prompt) {
+      return res.json({
+        success: false,
+        error: "No query or prompt received",
+        received: req.body
+      });
+    }
 
     const response = await axios.post(
       "https://api.groq.com/openai/v1/chat/completions",
@@ -36,9 +46,10 @@ app.post("/generate", async (req, res) => {
     });
 
   } catch (error) {
-    console.log(error);
+    console.log(error.response?.data || error.message);
     res.json({ success: false, error: error.message });
   }
 });
+
 
 app.listen(5000, () => console.log("Server running on port 5000"));
